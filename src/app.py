@@ -28,7 +28,7 @@ layout_map = dict(
     plot_bgcolor='#fffcfc',
     paper_bgcolor='#fffcfc',
     legend=dict(font=dict(size=10), orientation='h'),
-    title='WiFi Hotspots in NYC',
+    # title='WiFi Hotspots in NYC',
     mapbox=dict(
         accesstoken=mapbox_access_token,
         style="light",
