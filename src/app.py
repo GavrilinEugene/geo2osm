@@ -3,12 +3,22 @@ import dash
 import dash_core_components as dcc
 import dash_bootstrap_components as dbc
 import dash_html_components as html
-from config import default_coord, default_data, dict_map_type
+# from .config import default_coord, default_data, dict_map_type
 from dash.dependencies import Input, Output, State
-
-
 from plotly import graph_objs as go
-from plotly.graph_objs import *
+
+
+default_data = [dict(
+        lat=[51.98799603],
+        lon=[5.922999562],
+        type='scattermapbox',
+        marker=[dict(size=5, color='white', opacity=0)]
+    )]
+
+default_coord = dict(lat=55.749062, lon=37.540283)
+
+dict_map_type = dict(navigation=dict(margin=dict(l=10, r=10, b=0, t=10), style="open-street-map"),
+                     result=dict(margin=dict(l=10, r=10, b=0, t=10), style="open-street-map"))
 
 app = dash.Dash(external_stylesheets=[dbc.themes.LUX])
 server = app.server
