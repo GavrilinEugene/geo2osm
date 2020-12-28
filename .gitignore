@@ -85,6 +85,9 @@ data/raw/*
 data/processed/*
 !data/processed/.gitkeep
 !data/processed/*.dvc
+data/tmp_data/*
+!data/tmp_data/.gitkeep
+!data/tmp_data/*.dvc
 
 # Mac OS-specific storage files
 .DS_Store
