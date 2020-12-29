@@ -3,19 +3,12 @@ import dash
 import dash_core_components as dcc
 import dash_bootstrap_components as dbc
 import dash_html_components as html
-# from .config import default_coord, default_data, dict_map_type
+from dash.exceptions import PreventUpdate
+import app_utils
 from dash.dependencies import Input, Output, State
 from plotly import graph_objs as go
+from tiles import TileUtils
 
-
-default_data = [dict(
-        lat=[51.98799603],
-        lon=[5.922999562],
-        type='scattermapbox',
-        marker=[dict(size=5, color='white', opacity=0)]
-    )]
-
-default_coord = dict(lat=55.749062, lon=37.540283)
 
 dict_map_type = dict(navigation=dict(margin=dict(l=10, r=10, b=0, t=10), style="open-street-map"),
                      result=dict(margin=dict(l=10, r=10, b=0, t=10), style="open-street-map"))
@@ -23,7 +16,6 @@ dict_map_type = dict(navigation=dict(margin=dict(l=10, r=10, b=0, t=10), style="
 app = dash.Dash(external_stylesheets=[dbc.themes.LUX])
 server = app.server
 app.title = 'geo2osm'
-mapbox_access_token = 'pk.eyJ1IjoiZXZnZW5paWdhdnJpbGluIiwiYSI6ImNrMG50N3ptdjAzNW8zbm8wZzVmaXpzcWoifQ.LMSJohnSoBN-6YlAgKPO0w'
 
 def __update_map_layout(map_type, zoom, center_coord):
     """
@@ -32,11 +24,9 @@ def __update_map_layout(map_type, zoom, center_coord):
     map_layout = dict(
         autosize=True,
         automargin=True,
-        # height=1050,
         margin=dict_map_type[map_type]["margin"],
         hovermode="closest",
-        # legend=dict(font=dict(size=14), orientation='h'),
-        mapbox=dict(accesstoken=mapbox_access_token,
+        mapbox=dict(accesstoken=app_utils.get_mapbox_token(),
                     style=dict_map_type[map_type]["style"],
                     zoom=zoom,
                     center=center_coord)
@@ -46,8 +36,8 @@ def __update_map_layout(map_type, zoom, center_coord):
 
 def update_map_data(map_type):
     map_layout = __update_map_layout(
-        map_type, zoom=11, center_coord=default_coord)
-    figure = dict(data=default_data, layout=map_layout)
+        map_type, zoom=11, center_coord=app_utils.get_default_coord())
+    figure = dict(data=app_utils.get_default_data(), layout=map_layout)
     return figure
 
 
@@ -65,24 +55,41 @@ app.layout = html.Div(
                                            )), width=6),
             ]
         ),
+        dbc.Row(dbc.Col(html.Button('Generate', id='generate', n_clicks=0),width=3))
     ]
 )
 
+def get_bounding_box(relayoutData):
+    left = relayoutData['mapbox._derived']['coordinates'][0][0]
+    bottom = relayoutData['mapbox._derived']['coordinates'][2][1]
+    right = relayoutData['mapbox._derived']['coordinates'][1][0]
+    top = relayoutData['mapbox._derived']['coordinates'][0][1]
+    return [left, bottom, right, top]
 
 @app.callback(
     Output(component_id='result_map', component_property='figure'),
     Output(component_id='result_map', component_property='config'),
-    [Input(component_id='navigation_map', component_property='relayoutData')]
+    [Input(component_id='generate', component_property='n_clicks'),
+    Input(component_id='navigation_map', component_property='relayoutData')]
 )
-def update_map(relayoutData):
-    if relayoutData == None:
-        return
+def update_map(n_clicks, relayoutData):
+    if relayoutData == None or n_clicks == None:
+        raise PreventUpdate
+
+    changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
+    if "generate" in changed_id:
+        tile_params = {"api_token": app_utils.get_mapbox_token(),
+                       "tile_size": 256,
+                       "tmp_dir": app_utils.get_project_tmp_data_path()}
+        tileGen = TileUtils(tile_params)
+        tileGen.get_map(get_bounding_box(relayoutData), int(relayoutData['mapbox.zoom'] + 2))
+    
     if relayoutData.get('mapbox.center', 0) != 0:
         map_layout = __update_map_layout(
             'result', zoom=relayoutData['mapbox.zoom'], center_coord=relayoutData['mapbox.center'])
-        figure = dict(data=default_data, layout=map_layout)
+        result_figure = dict(data=app_utils.get_default_data(), layout=map_layout)
         map_config = dict(scrollZoom = True)
-        return figure, map_config
+        return result_figure, map_config
 
 
 if __name__ == '__main__':
