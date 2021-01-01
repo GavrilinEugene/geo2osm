@@ -4,10 +4,10 @@ import dash_core_components as dcc
 import dash_bootstrap_components as dbc
 import dash_html_components as html
 from dash.exceptions import PreventUpdate
-import app_utils
+import src.app_utils as app_utils
 from dash.dependencies import Input, Output, State
 from plotly import graph_objs as go
-from tiles import TileUtils
+from src.tiles import TileUtils
 
 
 dict_map_type = dict(navigation=dict(margin=dict(l=10, r=10, b=0, t=10), style="open-street-map"),
