@@ -48,11 +48,7 @@ app.layout = html.Div(
         dbc.Row(
             [
                 dbc.Col(html.Div(dcc.Graph(id='navigation_map',
-                                           figure=update_map_data("navigation"))), width=6),
-                dbc.Col(html.Div(dcc.Graph(id='result_map',
-                                           figure=update_map_data("result"),
-                                           config={'staticPlot': True}
-                                           )), width=6),
+                                           figure=update_map_data("navigation"))), width=12),
             ]
         ),
         dbc.Row(dbc.Col(html.Button('Generate', id='generate', n_clicks=0),width=3))
@@ -67,8 +63,8 @@ def get_bounding_box(relayoutData):
     return [left, bottom, right, top]
 
 @app.callback(
-    Output(component_id='result_map', component_property='figure'),
-    Output(component_id='result_map', component_property='config'),
+    Output(component_id='navigation_map', component_property='figure'),
+    Output(component_id='navigation_map', component_property='config'),
     [Input(component_id='generate', component_property='n_clicks'),
     Input(component_id='navigation_map', component_property='relayoutData')]
 )
