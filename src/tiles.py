@@ -23,8 +23,7 @@ def convert_jpg_to_geotiff(image_source_path: str, image_output_path: str, geo_t
 
 
 def clip_geotiff(image_source_path: str, image_output_path: str, bbox: list):
-    print(bbox)
-    [bbox[2], bbox[3], bbox[0], bbox[1]]
+    """ clip geotif by bounding box (left, bottom, right, top]) """
     ds = gdal.Open(image_source_path)
     ds = gdal.Translate(image_output_path, ds, projWin = [bbox[0], bbox[3], bbox[2], bbox[1]])
     ds = None
@@ -33,8 +32,8 @@ def clip_geotiff(image_source_path: str, image_output_path: str, bbox: list):
 def get_geo_transform(tile_lt, tile_rb, width, height):
     lt_bounds = mercantile.bounds(tile_lt)
     rb_bound = mercantile.bounds(tile_rb)
-    x = lt_bounds.east
-    y = rb_bound.north
+    x = lt_bounds.west
+    y = lt_bounds.north
     geotransform = []
     geotransform.append(x)
     geotransform.append((rb_bound.east - lt_bounds.west) / width)
@@ -42,7 +41,6 @@ def get_geo_transform(tile_lt, tile_rb, width, height):
     geotransform.append(y)
     geotransform.append(0)
     geotransform.append((rb_bound.south - lt_bounds.north) / height)
-    print(geotransform)
     return geotransform
 
 
@@ -107,6 +105,7 @@ class TileUtils:
 
                 img = Image.open(path)
                 result_image.paste(img, (x_paste, y_paste))
+                
                 del img
                 os.remove(path)
         result_image.save(self.tmp_dir + '/mapbox_raw_image.jpg')
