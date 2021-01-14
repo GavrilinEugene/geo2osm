@@ -8,6 +8,9 @@ def get_project_root() -> str:
 def get_project_tmp_data_path() -> str:
     return get_project_root() + "/data/tmp_data"
 
+def get_model_path() -> str:
+    return get_project_root() + "/models/model.pkl"
+
 
 def get_mapbox_token() -> str:
     return 'pk.eyJ1IjoiZXZnZW5paWdhdnJpbGluIiwiYSI6ImNrMG50N3ptdjAzNW8zbm8wZzVmaXpzcWoifQ.LMSJohnSoBN-6YlAgKPO0w'
