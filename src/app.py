@@ -7,12 +7,11 @@ from dash.exceptions import PreventUpdate
 import app_utils as app_utils
 from dash.dependencies import Input, Output, State
 from plotly import graph_objs as go
-from tiles import TileUtils
+from tile_utils import TileUtils
+from overpass_utils import get_geojson
 from model import Geo2osmModel
+import pandas as pd
 
-
-dict_map_type = dict(navigation=dict(margin=dict(l=10, r=10, b=0, t=10), style="satellite"),
-                     result=dict(margin=dict(l=10, r=10, b=0, t=10), style="open-street-map"))
 
 app = dash.Dash(external_stylesheets=[dbc.themes.LUX])
 server = app.server
@@ -21,27 +20,29 @@ model = Geo2osmModel(app_utils.get_model_path(),
 app.title = 'geo2osm'
 
 
-def __update_map_layout(map_type, zoom, center_coord):
+def __update_map_layout(zoom, center_coord):
     """
 
     """
     map_layout = dict(
         autosize=True,
         automargin=True,
-        margin=dict_map_type[map_type]["margin"],
+        margin=dict(l=10, r=10, b=0, t=10),
         hovermode="closest",
         mapbox=dict(accesstoken=app_utils.get_mapbox_token(),
-                    style=dict_map_type[map_type]["style"],
+                    style="satellite",
                     zoom=zoom,
                     center=center_coord)
     )
     return map_layout
 
 
-def update_map_data(map_type):
-    map_layout = __update_map_layout(
-        map_type, zoom=11, center_coord=app_utils.get_default_coord())
-    figure = dict(data=app_utils.get_default_data(), layout=map_layout)
+def update_map_data(zoom=11, center_coord=app_utils.get_default_coord(), data=app_utils.get_default_data()):
+    """
+    
+    """
+    map_layout = __update_map_layout(zoom=zoom, center_coord=center_coord)
+    figure = dict(data=data, layout=map_layout)
     return figure
 
 
@@ -52,7 +53,7 @@ app.layout = html.Div(
         dbc.Row(
             [
                 dbc.Col(html.Div(dcc.Graph(id='navigation_map',
-                                           figure=update_map_data("navigation"))), width=12),
+                                           figure=update_map_data())), width=12),
             ]
         ),
         dbc.Row(dbc.Col(html.Button('Generate', id='generate', n_clicks=0), width=3))
@@ -70,7 +71,6 @@ def get_bounding_box(relayoutData):
 
 @app.callback(
     Output(component_id='navigation_map', component_property='figure'),
-    Output(component_id='navigation_map', component_property='config'),
     [Input(component_id='generate', component_property='n_clicks'),
      Input(component_id='navigation_map', component_property='relayoutData')]
 )
@@ -79,22 +79,25 @@ def update_map(n_clicks, relayoutData):
         raise PreventUpdate
 
     changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
+
     if "generate" in changed_id:
         tile_params = {"api_token": app_utils.get_mapbox_token(),
                        "tile_size": 256,
                        "tmp_dir": app_utils.get_project_tmp_data_path()}
         tileGen = TileUtils(tile_params)
-        map_image_path = tileGen.get_map(get_bounding_box(
-            relayoutData), int(relayoutData['mapbox.zoom'] + 1))
-        # model.predict(map_image)
+        # map_image_path = tileGen.get_map(get_bounding_box(
+        #     relayoutData), int(relayoutData['mapbox.zoom'] + 1))
 
-    if relayoutData.get('mapbox.center', 0) != 0:
-        map_layout = __update_map_layout(
-            'navigation', zoom=relayoutData['mapbox.zoom'], center_coord=relayoutData['mapbox.center'])
-        result_figure = dict(
-            data=app_utils.get_default_data(), layout=map_layout)
-        map_config = dict(scrollZoom=True)
-        return result_figure, map_config
+        geo_json = get_geojson(get_bounding_box(relayoutData))
+        df = pd.DataFrame([geo_json['features'][x]['properties']['id']
+                           for x in range(0, len(geo_json['features']))],
+                          columns=['osm_id'])
+        result_figure = update_map_data(
+            relayoutData['mapbox.zoom'], relayoutData['mapbox.center'])
+        result_figure['data'].append(
+            go.Choroplethmapbox(geojson=geo_json, locations=df.osm_id, z=df.osm_id))
+        return result_figure
+    raise PreventUpdate
 
 
 if __name__ == '__main__':
