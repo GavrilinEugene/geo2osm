@@ -12,9 +12,9 @@ from plotly import graph_objs as go
 import pandas as pd
 
 # own libraries
-import app.app_utils  as app_utils
-from app.tile_utils import TileUtils
-from app.overpass_utils import get_geojson
+import application.app_utils  as app_utils
+from application.tile_utils import TileUtils
+from application.overpass_utils import get_geojson
 
 
 app = dash.Dash(external_stylesheets=[dbc.themes.LUX])
