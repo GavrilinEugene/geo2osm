@@ -1,6 +1,13 @@
 geo2osm_app
 ==============================
 
+Installation details
+
+-- todo: install gdal
+make venv
+source venv/bin/activate
+pip3 install -r requirements.txt
+
 desc
 
 Project Organization

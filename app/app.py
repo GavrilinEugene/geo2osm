@@ -1,22 +1,26 @@
 # -*- coding: utf-8 -*-
+# dash components
 import dash
 import dash_core_components as dcc
 import dash_bootstrap_components as dbc
 import dash_html_components as html
 from dash.exceptions import PreventUpdate
-import app_utils as app_utils
 from dash.dependencies import Input, Output, State
+
+# python libraries
 from plotly import graph_objs as go
-from tile_utils import TileUtils
-from overpass_utils import get_geojson
-from model import Geo2osmModel
 import pandas as pd
+
+# own libraries
+import app.app_utils  as app_utils
+from app.tile_utils import TileUtils
+from app.overpass_utils import get_geojson
 
 
 app = dash.Dash(external_stylesheets=[dbc.themes.LUX])
 server = app.server
-model = Geo2osmModel(app_utils.get_model_path(),
-                     app_utils.get_project_tmp_data_path())
+# model = Geo2osmModel(app_utils.get_model_path(),
+#                      app_utils.get_project_tmp_data_path())
 app.title = 'geo2osm'
 
 
@@ -85,10 +89,11 @@ def update_map(n_clicks, relayoutData):
                        "tile_size": 256,
                        "tmp_dir": app_utils.get_project_tmp_data_path()}
         tileGen = TileUtils(tile_params)
-        # map_image_path = tileGen.get_map(get_bounding_box(
-        #     relayoutData), int(relayoutData['mapbox.zoom'] + 1))
+        _ = tileGen.get_map(get_bounding_box(
+            relayoutData), int(relayoutData['mapbox.zoom'] + 1))
 
         geo_json = get_geojson(get_bounding_box(relayoutData))
+
         df = pd.DataFrame([geo_json['features'][x]['properties']['id']
                            for x in range(0, len(geo_json['features']))],
                           columns=['osm_id'])

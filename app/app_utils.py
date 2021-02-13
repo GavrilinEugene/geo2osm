@@ -26,7 +26,3 @@ def get_default_data() -> list:
 
 def get_default_coord() -> dict:
     return dict(lat=55.749062, lon=37.540283)
-
-
-dict_map_type = dict(navigation=dict(margin=dict(l=10, r=10, b=0, t=10), style="open-street-map"),
-                     result=dict(margin=dict(l=10, r=10, b=0, t=10), style="open-street-map"))

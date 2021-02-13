@@ -23,6 +23,7 @@ def get_geojson(bbox, list_node_types = ['way["building"]']):
         raise requests.exceptions.HTTPError(f'Overpass server respond with status {r.status_code}')
 
     data = json2geojson(r.json())
+    print(data)
     for x in range(0, len(data['features'])):
         data['features'][x]['id'] = data['features'][x]['properties']['id']
     return data
